@@ -1,18 +1,16 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
 import { signToken } from '@/lib/auth';
+import { getLang, t } from '@/lib/i18n';
 
 export async function POST(req) {
     try {
         await dbConnect();
+        const lang = getLang(req);
         const { username, email, password } = await req.json();
 
         // 1. Basic Validation
         if (!username || !email || !password) {
             return NextResponse.json(
-                { status: 'error', message: 'All fields are required' },
+                { status: 'error', message: t('all_fields_required', lang) },
                 { status: 400 }
             );
         }
@@ -24,7 +22,7 @@ export async function POST(req) {
 
         if (existingUser) {
             return NextResponse.json(
-                { status: 'error', message: 'Email or username already exists' },
+                { status: 'error', message: t('user_exists', lang) },
                 { status: 409 }
             );
         }
@@ -45,7 +43,7 @@ export async function POST(req) {
         // 6. Return response
         return NextResponse.json({
             status: 'success',
-            message: 'User registered successfully',
+            message: t('user_registered', lang),
             data: {
                 user: {
                     id: user._id,

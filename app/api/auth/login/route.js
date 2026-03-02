@@ -1,18 +1,16 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
 import { signToken } from '@/lib/auth';
+import { getLang, t } from '@/lib/i18n';
 
 export async function POST(req) {
     try {
         await dbConnect();
+        const lang = getLang(req);
         const { email, password } = await req.json();
 
         // 1. Basic Validation
         if (!email || !password) {
             return NextResponse.json(
-                { status: 'error', message: 'Email and password are required' },
+                { status: 'error', message: t('all_fields_required', lang) },
                 { status: 400 }
             );
         }
@@ -21,7 +19,7 @@ export async function POST(req) {
         const user = await User.findOne({ email });
         if (!user) {
             return NextResponse.json(
-                { status: 'error', message: 'Invalid credentials' },
+                { status: 'error', message: t('invalid_credentials', lang) },
                 { status: 401 }
             );
         }
@@ -30,7 +28,7 @@ export async function POST(req) {
         const isValid = await bcrypt.compare(password, user.password_hash);
         if (!isValid) {
             return NextResponse.json(
-                { status: 'error', message: 'Invalid credentials' },
+                { status: 'error', message: t('invalid_credentials', lang) },
                 { status: 401 }
             );
         }
@@ -41,7 +39,7 @@ export async function POST(req) {
         // 5. Return Response
         return NextResponse.json({
             status: 'success',
-            message: 'Login successful',
+            message: t('login_successful', lang),
             data: {
                 user: {
                     id: user._id,
